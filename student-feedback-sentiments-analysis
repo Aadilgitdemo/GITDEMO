@@ -1,0 +1,160 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyNl32Vez7/O1n/Q6qWEL/qy",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Aadilgitdemo/GITDEMO/blob/main/student-feedback-sentiments-analysis\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "3qib9BHRdQGV",
+        "outputId": "783c1ae1-e3e4-40dd-bfde-742758448481"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- Student Feedback Sentiment Analysis Results ---\n",
+            "Overall Accuracy: 100.00%\n",
+            "\n",
+            "Classification Report:\n",
+            "              precision    recall  f1-score   support\n",
+            "\n",
+            "    Negative       1.00      1.00      1.00        30\n",
+            "     Neutral       1.00      1.00      1.00        30\n",
+            "    Positive       1.00      1.00      1.00        30\n",
+            "\n",
+            "    accuracy                           1.00        90\n",
+            "   macro avg       1.00      1.00      1.00        90\n",
+            "weighted avg       1.00      1.00      1.00        90\n",
+            "\n",
+            "[Negative] -> The teacher gave clear explanations and helpful feedback.\n",
+            "[Neutral] -> Very bad management, labs were canceled without notice.\n",
+            "[Neutral] -> Topics were covered as outlined in the syllabus.\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "/usr/local/lib/python3.13/dist-packages/sklearn/linear_model/_logistic.py:1247: FutureWarning: 'multi_class' was deprecated in version 1.5 and will be removed in 1.7. From then on, it will always use 'multinomial'. Leave it to its default value to avoid this warning.\n",
+            "  warnings.warn(\n"
+          ]
+        }
+      ],
+      "source": [
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.feature_extraction.text import TfidfVectorizer\n",
+        "from sklearn.linear_model import LogisticRegression\n",
+        "from sklearn.metrics import classification_report, accuracy_score, confusion_matrix\n",
+        "\n",
+        "# 1. Representative Student Feedback Dataset (Positive, Negative, Neutral)\n",
+        "data = {\n",
+        "    \"feedback\": [\n",
+        "        \"The professor explains difficult concepts very clearly and with practical examples.\",\n",
+        "        \"Course material was poorly structured and deadlines were unreasonable.\",\n",
+        "        \"Lectures were average, covering basic topics without much depth.\",\n",
+        "        \"Excellent practical assignments that helped me understand machine learning.\",\n",
+        "        \"Worst course experience, teaching assistants were completely unhelpful.\",\n",
+        "        \"The pacing was okay, standard theoretical slides with standard exercises.\",\n",
+        "        \"Inspiring instructor, always available to answer doubts after class.\",\n",
+        "        \"Outdated curriculum with obsolete tools, not relevant to current industry.\",\n",
+        "        \"Decent introduction to the topic, neither exceptionally good nor bad.\",\n",
+        "        \"Loved the real-world case studies and hands-on lab sessions.\",\n",
+        "        \"Evaluation and grading were extremely biased and delayed for weeks.\",\n",
+        "        \"The syllabus was completed on time, standard textbook content throughout.\",\n",
+        "        \"The instructor was engaging and made every complex topic simple.\",\n",
+        "        \"Lacked practical coding examples, purely theoretical and boring.\",\n",
+        "        \"Fair evaluation, covered all promised topics adequately.\",\n",
+        "        \"Outstanding guidance on the final semester capstone project.\",\n",
+        "        \"Poor audio quality in recordings and disorganized reading materials.\",\n",
+        "        \"Normal lecture delivery, slides provided after class as expected.\"\n",
+        "    ] * 25,  # Replicate samples to simulate a 450-record dataset\n",
+        "    \"sentiment\": [\n",
+        "        \"Positive\", \"Negative\", \"Neutral\",\n",
+        "        \"Positive\", \"Negative\", \"Neutral\",\n",
+        "        \"Positive\", \"Negative\", \"Neutral\",\n",
+        "        \"Positive\", \"Negative\", \"Neutral\",\n",
+        "        \"Positive\", \"Negative\", \"Neutral\",\n",
+        "        \"Positive\", \"Negative\", \"Neutral\"\n",
+        "    ] * 25\n",
+        "}\n",
+        "\n",
+        "df = pd.DataFrame(data)\n",
+        "\n",
+        "# 2. Train-Test Split (80/20) with stratification\n",
+        "X_train, X_test, y_train, y_test = train_test_split(\n",
+        "    df[\"feedback\"], df[\"sentiment\"], test_size=0.2, random_state=42, stratify=df[\"sentiment\"]\n",
+        ")\n",
+        "\n",
+        "# 3. Text Preprocessing & TF-IDF Vectorization\n",
+        "# Removing standard English stopwords, lowercasing, and using unigrams + bigrams\n",
+        "tfidf = TfidfVectorizer(stop_words=\"english\", lowercase=True, ngram_range=(1, 2), max_features=1500)\n",
+        "X_train_vec = tfidf.fit_transform(X_train)\n",
+        "X_test_vec = tfidf.transform(X_test)\n",
+        "\n",
+        "# 4. Train Multiclass Logistic Regression\n",
+        "model = LogisticRegression(max_iter=1000, multi_class=\"multinomial\")\n",
+        "model.fit(X_train_vec, y_train)\n",
+        "\n",
+        "# 5. Evaluate Performance\n",
+        "y_pred = model.predict(X_test_vec)\n",
+        "\n",
+        "print(\"--- Student Feedback Sentiment Analysis Results ---\")\n",
+        "print(f\"Overall Accuracy: {accuracy_score(y_test, y_pred) * 100:.2f}%\\n\")\n",
+        "print(\"Classification Report:\")\n",
+        "print(classification_report(y_test, y_pred))\n",
+        "\n",
+        "# 6. Test on Unseen Feedback\n",
+        "sample_reviews = [\n",
+        "    \"The teacher gave clear explanations and helpful feedback.\",\n",
+        "    \"Very bad management, labs were canceled without notice.\",\n",
+        "    \"Topics were covered as outlined in the syllabus.\"\n",
+        "]\n",
+        "sample_vec = tfidf.transform(sample_reviews)\n",
+        "predictions = model.predict(sample_vec)\n",
+        "\n",
+        "for text, pred in zip(sample_reviews, predictions):\n",
+        "    print(f\"[{pred}] -> {text}\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "u4VmrDVqdZpF"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
